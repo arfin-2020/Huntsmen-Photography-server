@@ -22,6 +22,7 @@ app.get('/', (req, res) => {
 
   client.connect(err => {
     const reviewCollection = client.db("huntsmenPhotography").collection("reviews")
+    const orderCollection = client.db("huntsmenPhotography").collection("order")
 
     app.post('/addreview',(req, res) => {
       const file = req.files.file;
@@ -61,8 +62,45 @@ app.get('/', (req, res) => {
           .toArray((err, documents) => {
               res.send(documents);
           })
-  });
+      });
 
+    app.post('/addorder', (req, res) => {
+      const file = req.files.file;
+      const category = req. body.category ;
+      const price = req.body.price;
+      const filePath = `${__dirname}/orderImg/${file.name}`
+      console.log(category,price,file)
+      file.mv(filePath,unsuccess=>{
+        if(unsuccess){
+          console.log(unsuccess)
+          res.status(500).send({msg:'failed to upload Image'})
+        }
+        const newlastImg  =  fs.readFileSync(filePath)
+        const encoImg = newlastImg.toString('base64')
+        var image1 =  {
+          contentType: req.files.file.mimetype,
+          size: req.files.file.size,
+          img: Buffer(encoImg, 'base64')
+        };
+        orderCollection.insertOne({category,price,image1})
+        .then(success => {
+          fs.remove(filePath,errors => {
+            if(errors){
+              console.log(errors);
+              res.status(500).send({msg:'failed to upload Image'})
+            }
+            res.send(success.insertedCount > 0)
+          })
+        })
+      })
+    })
+    
+    app.get('/orders', (req, res) => {
+      orderCollection.find({})
+          .toArray((err, documents) => {
+              res.send(documents);
+          })
+  });
     app.post('/isAdmin', (req, res)=>{
       const email = req.body.email;
       reviewCollection.find({email:email})
