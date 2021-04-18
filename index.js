@@ -24,22 +24,15 @@ app.get('/', (req, res) => {
   client.connect(err => {
     const reviewCollection = client.db("huntsmenPhotography").collection("reviews")
     const orderCollection = client.db("huntsmenPhotography").collection("order")
+    const selectedordersCollection = client.db("huntsmenPhotography").collection("selectedorders")
 
     app.post('/addreview',(req, res) => {
       const file = req.files.file;
       const name = req. body.name;
       const position = req.body.position;
-      // const filePath = `${__dirname}/reviewImg/${file.name}`
       console.log(name, position,file)
-      // file.mv(filePath,err =>{
-      //   if(err){
-      //     console.log(err)
-      //     res.status(500).send({msg:'failed to upload Image'})
-      //   }
-
-        const newImg  = req.files.file.data
-        const encImg = newImg.toString('base64')
-
+      const newImg  = req.files.file.data
+      const encImg = newImg.toString('base64')
         var image = {
           contentType: file.mimetype,
           size: file.size,
@@ -47,14 +40,7 @@ app.get('/', (req, res) => {
         };  
           reviewCollection.insertOne({name,position,image})
           .then(result =>{
-            // fs.remove(filePath,error =>{
-            //     if(error){
-            //       console.log(error)
-            //       res.status(500).send({msg:'failed to upload Image'})
-            //     }
-                res.send(result.insertedCount > 0)
-            // })
-          // })
+            res.send(result.insertedCount > 0)
       })
     })
 
@@ -69,15 +55,9 @@ app.get('/', (req, res) => {
       const file = req.files.file;
       const category = req. body.category ;
       const price = req.body.price;
-      // const filePath = `${__dirname}/orderImg/${file.name}`
       console.log(category,price,file)
-      // file.mv(filePath,unsuccess=>{
-      //   if(unsuccess){
-      //     console.log(unsuccess)
-      //     res.status(500).send({msg:'failed to upload Image'})
-      //   }
-        const newlastImg  =  req.files.file.data
-        const encoImg = newlastImg.toString('base64')
+      const newlastImg  =  req.files.file.data
+      const encoImg = newlastImg.toString('base64')
         var image1 =  {
           contentType: file.mimetype,
           size: file.size,
@@ -85,38 +65,51 @@ app.get('/', (req, res) => {
         };
         orderCollection.insertOne({category,price,image1})
         .then(success => {
-          // fs.remove(filePath,errors => {
-            // if(errors){
-            //   console.log(errors);
-            //   res.status(500).send({msg:'failed to upload Image'})
-            // }
             res.send(success.insertedCount > 0)
-          // })
         })
-      // })
     })
 
-    app.get('/orders', (req, res) => {
+     app.get('/orders', (req, res) => {
       orderCollection.find({})
           .toArray((err, documents) => {
-              res.send(documents);
+            res.send(documents);
           })
-  });
+   });
+
     app.post('/isAdmin', (req, res)=>{
       const email = req.body.email;
       reviewCollection.find({email:email})
       .toArray((error,admin)=>{
-          res.send(admin.length > 0)
+        res.send(admin.length > 0)
       })
   })
 
-  app.get('/order/:id',(req, res)=>{
+   app.get('/order/:id',(req, res)=>{
     orderCollection.find({ _id: ObjectId(req.params.id) })
     .toArray((err,items)=>{
      const result= res.send(items[0]);
-     
+       })
+   })
+
+  app.post('/selectedorder', (req, res)=>{
+    const name=req.body.name;
+    const email=req.body.email;
+    const address=req.body.address;
+    const category=req.body.category;
+    const phone = req.body.phone;
+    console.log(name,email,address,phone,category);
+    selectedordersCollection.insertOne({name,email,address,category,phone})
+    .then(alset =>{
+      res.send(alset.insertedCount > 0)
     })
   })
+
+  app.get('/selectedorders', (req, res)=>{
+    selectedordersCollection.find({})
+    .toArray((err,documents)=>{
+      res.send(documents);
+        })
+     })
   });
 
   app.listen(process.env.PORT||port)
