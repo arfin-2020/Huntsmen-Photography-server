@@ -1,5 +1,6 @@
 const express = require('express')
 const MongoClient = require('mongodb').MongoClient;
+const ObjectId = require('mongodb').ObjectId;
 const cors = require('cors');
 const fileUpload = require('express-fileupload');
 const app = express()
@@ -28,32 +29,32 @@ app.get('/', (req, res) => {
       const file = req.files.file;
       const name = req. body.name;
       const position = req.body.position;
-      const filePath = `${__dirname}/reviewImg/${file.name}`
+      // const filePath = `${__dirname}/reviewImg/${file.name}`
       console.log(name, position,file)
-      file.mv(filePath,err =>{
-        if(err){
-          console.log(err)
-          res.status(500).send({msg:'failed to upload Image'})
-        }
+      // file.mv(filePath,err =>{
+      //   if(err){
+      //     console.log(err)
+      //     res.status(500).send({msg:'failed to upload Image'})
+      //   }
 
-        const newImg  = fs.readFileSync(filePath)
+        const newImg  = req.files.file.data
         const encImg = newImg.toString('base64')
 
         var image = {
-          contentType: req.files.file.mimetype,
-          size: req.files.file.size,
-          img: Buffer(encImg, 'base64')
+          contentType: file.mimetype,
+          size: file.size,
+          img: Buffer.from(encImg, 'base64')
         };  
           reviewCollection.insertOne({name,position,image})
           .then(result =>{
-            fs.remove(filePath,error =>{
-                if(error){
-                  console.log(error)
-                  res.status(500).send({msg:'failed to upload Image'})
-                }
+            // fs.remove(filePath,error =>{
+            //     if(error){
+            //       console.log(error)
+            //       res.status(500).send({msg:'failed to upload Image'})
+            //     }
                 res.send(result.insertedCount > 0)
-            })
-          })
+            // })
+          // })
       })
     })
 
@@ -68,33 +69,33 @@ app.get('/', (req, res) => {
       const file = req.files.file;
       const category = req. body.category ;
       const price = req.body.price;
-      const filePath = `${__dirname}/orderImg/${file.name}`
+      // const filePath = `${__dirname}/orderImg/${file.name}`
       console.log(category,price,file)
-      file.mv(filePath,unsuccess=>{
-        if(unsuccess){
-          console.log(unsuccess)
-          res.status(500).send({msg:'failed to upload Image'})
-        }
-        const newlastImg  =  fs.readFileSync(filePath)
+      // file.mv(filePath,unsuccess=>{
+      //   if(unsuccess){
+      //     console.log(unsuccess)
+      //     res.status(500).send({msg:'failed to upload Image'})
+      //   }
+        const newlastImg  =  req.files.file.data
         const encoImg = newlastImg.toString('base64')
         var image1 =  {
-          contentType: req.files.file.mimetype,
-          size: req.files.file.size,
-          img: Buffer(encoImg, 'base64')
+          contentType: file.mimetype,
+          size: file.size,
+          img: Buffer.from(encoImg, 'base64')
         };
         orderCollection.insertOne({category,price,image1})
         .then(success => {
-          fs.remove(filePath,errors => {
-            if(errors){
-              console.log(errors);
-              res.status(500).send({msg:'failed to upload Image'})
-            }
+          // fs.remove(filePath,errors => {
+            // if(errors){
+            //   console.log(errors);
+            //   res.status(500).send({msg:'failed to upload Image'})
+            // }
             res.send(success.insertedCount > 0)
-          })
+          // })
         })
-      })
+      // })
     })
-    
+
     app.get('/orders', (req, res) => {
       orderCollection.find({})
           .toArray((err, documents) => {
@@ -107,6 +108,14 @@ app.get('/', (req, res) => {
       .toArray((error,admin)=>{
           res.send(admin.length > 0)
       })
+  })
+
+  app.get('/order/:id',(req, res)=>{
+    orderCollection.find({ _id: ObjectId(req.params.id) })
+    .toArray((err,items)=>{
+     const result= res.send(items[0]);
+     
+    })
   })
   });
 
